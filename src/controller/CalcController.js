@@ -7,15 +7,17 @@ class CalcController {
 
   }
 
+//retorna boolean se é um operador
   isOperator(value) {
     return (['+', '-', '/', '*' ].indexOf(value) > -1);
   }
 
+//adicionar operação
   pushOperator(value) {
     this._operation.push(value);
   }
 
-
+// get and set da última operação
   getLastOperation() {
     return this._operation[this._operation.length-1];
   }
@@ -24,13 +26,23 @@ class CalcController {
     this._operation[this._operation.length-1] = value;
   }
 
+  /******/
+
+  setLastNumberToDisplay() {
+    for (let i = this._operation.length-1; i >= 0; i--) {
+      if (!this.isOperator(this._operation[i])) {
+        this.displayCalc = this._operation[i];
+      }
+    }
+  }
+
   addOperation(value) {
 
     if(this._operation.length > -1) {
       //É um operador?
       if(this.isOperator(value)){
         if(this.isOperator(this.getLastOperation())) {
-          this._operation[this._operation.length-1] = value;
+          this.setlastOperation(value);
 
         } else {
           this.pushOperator(value);
@@ -40,15 +52,17 @@ class CalcController {
       } else if (!isNaN(this.getLastOperation())) {
         let newValue = parseFloat(this.getLastOperation().toString() + value.toString());
         this.setlastOperation(newValue);
-        console.log('caiu aqui a');
+
       }
       //Caso primeiro Número
       else {
         this.pushOperator(value);
-        console.log('caiu aqui b');
+
 
       }
     }
+
+      this.setLastNumberToDisplay();
 
   }
 
@@ -122,6 +136,7 @@ class CalcController {
       case '9':
         value = parseInt(value);
         this.addOperation(value);
+
         break;
 
       default:
