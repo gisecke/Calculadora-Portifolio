@@ -4,7 +4,63 @@ class CalcController {
     this._displayCalcEl = document.querySelector('#display');
     this.buttonsClickEvent();
     this._operation = [];
+    this._firstNumber = '';
+    this._lastOperator = '';
+    this._lastNumber = '';
 
+  }
+
+
+
+  clearEntry() {
+    this._operation.pop();
+    this.setLastNumberToDisplay();
+
+  }
+
+  clearAll() {
+    this._operation = [0];
+    this._lastOperator = '';
+    this._firstNumber = '';
+    this._lastNumber= '';
+    this.setLastNumberToDisplay();
+  }
+
+  backspace() {
+    let lastNumber = this.getLastOperation();
+    if (!this.isOperator(lastNumber)) {
+      let splitLastNumber = lastNumber.toString().split('');
+      splitLastNumber.pop();
+      this.setlastOperation(parseFloat(splitLastNumber.join('')));
+      this.setLastNumberToDisplay();
+    }
+  }
+
+  //cálculo porcentagem
+  calcPercent() {
+    if (this._operation.length == 1 && this._lastOperator) {
+      this._operation = [this._operation/100];
+
+    } else if (this._operation.length == 2) {
+        if (this.getLastOperation() == '*' || this.getLastOperation() == '/' ) {
+          this._lastNumber = this._operation[0]/100;
+          this.pushOperator(this._lastNumber);
+        } else {
+          this._lastNumber = this._operation[0]*this._operation[0]/100;
+          this.pushOperator(this._lastNumber);
+        }
+      } else if (this._operation.length == 3) {
+          if (this.getLastOperator() == '*' || this.getLastOperator() == '/' ) {
+            this._lastNumber = this.getLastOperation()/100;
+            this.setlastOperation(this._lastNumber);
+          } else {
+            this._lastNumber = this.getLastOperation()*this.getLastOperation/100;
+            this.setlastOperation(this._lastNumber);
+          }
+        } else {
+      this.clearAll();
+    }
+    this.setLastNumberToDisplay();
   }
 
 //retorna boolean se é um operador
@@ -22,6 +78,19 @@ class CalcController {
     return this._operation[this._operation.length-1];
   }
 
+  getLastOperator() {
+    for (var i = this._operation.length; i >= 0; i--) {
+      if(this.isOperator(this._operation[i])) {
+        return this._operation[i];
+        break;
+      }
+    }
+  }
+
+  getLastOperations() {
+    this._lastNumber = this.getLastOperation();
+    this._lastOperator = this.getLastOperator();
+  }
   setlastOperation(value) {
     this._operation[this._operation.length-1] = value;
   }
@@ -29,11 +98,47 @@ class CalcController {
   /******/
 
   setLastNumberToDisplay() {
-    for (let i = this._operation.length-1; i >= 0; i--) {
-      if (!this.isOperator(this._operation[i])) {
-        this.displayCalc = this._operation[i];
-      }
+
+
+    if (!this.isOperator(this.getLastOperation())) {
+      this.displayCalc = this.getLastOperation();
+    } else {
+      this.displayCalc = this._operation[this._operation.length-2];
     }
+  }
+
+  calc() {
+        //se for apenas um número e o operador
+    if(this.isOperator(this.getLastOperation()) && this._operation.length < 3) {
+      this._lastOperator = this.getLastOperation();
+      this._firstNumber = this._operation[0].toString();
+      let mathExpression = this._operation;
+      mathExpression.push(this._firstNumber);
+      mathExpression = mathExpression.join('');
+      this._operation = [eval(mathExpression)];
+    }
+    //repetição do igual
+    else if (this._firstNumber && this._lastOperator) {
+      let mathExpression = [this._operation[0], this._lastOperator, this._firstNumber];
+      this._operation = [eval(mathExpression.join(''))];
+    } //repetição do igual depois da operação
+    else if (this._lastNumber || this._lastOperator) {
+      //depois de apertar o igual e somar ou subtrair
+      if (this._operation.length == 3) {
+        this.getLastOperations();
+        this._operation = [eval(this._operation.join(''))];
+      } else {
+        let mathExpression = [this._operation[0], this._lastOperator, this._lastNumber];
+        this._operation = [eval(mathExpression.join(''))];
+      }
+    } else {
+    this.getLastOperations();
+      let mathExpression = [this._operation[0], this._lastOperator, this._lastNumber];
+      this._operation = [eval(mathExpression.join(''))];
+
+    }
+    this.setLastNumberToDisplay();
+
   }
 
   addOperation(value) {
@@ -41,9 +146,11 @@ class CalcController {
     if(this._operation.length > -1) {
       //É um operador?
       if(this.isOperator(value)){
-        if(this.isOperator(this.getLastOperation())) {
+        if (this._operation.length > 2){
+          this.calc();
+          this.pushOperator(value);
+        } else if(this.isOperator(this.getLastOperation())) {
           this.setlastOperation(value);
-
         } else {
           this.pushOperator(value);
 
@@ -71,17 +178,17 @@ class CalcController {
 
     switch (value) {
       case 'CE':
-
+        this.clearEntry();
         break;
       case 'C':
-
+        this.clearAll();
         break;
       case '←':
-
+        this.backspace();
         break;
 
       case '%':
-
+      this.calcPercent();
         break;
       case '√':
 
@@ -104,7 +211,7 @@ class CalcController {
 
         break;
       case '=':
-
+        this.calc();
         break;
 
         //Operações Matemáticas
